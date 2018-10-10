@@ -2,7 +2,6 @@
 
 ### auto select best classifier 
 * classifiers.py: Classifier creator functions based on sklearn 
-
 * select_classifier.py: based on classifiers.py, create classifier list to auto select best classifier.
 
 ### duplicate image checking 
