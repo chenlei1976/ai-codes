@@ -134,21 +134,6 @@ if __name__ == '__main__':
     image1 = cv2.imread('/home/chenlei/images/feature_detection/4114-luggage.jpg')
     image2 = cv2.imread('/home/chenlei/images/feature_detection/5395-luggage.jpg')
 
-    # image1 = cv2.imread('/home/chenlei/images/feature_detection/7473-luggage.jpg')
-    # image2 = cv2.imread('/home/chenlei/images/feature_detection/7553-luggage.jpeg')
-
-    # image1 = cv2.imread('/home/chenlei/images/feature_detection/6812-luggage 1.jpg')
-    # image2 = cv2.imread('/home/chenlei/images/feature_detection/6812-luggage 2.jpg')
-
-    # image1 = cv2.imread('/home/chenlei/images/feature_detection/hospital1.jpg')
-    # image2 = cv2.imread('/home/chenlei/images/feature_detection/hospital3.jpg')
-
-    # image1 = cv2.imread('/home/chenlei/images/feature_detection/clinic1.png')
-    # image2 = cv2.imread('/home/chenlei/images/feature_detection/clinic2.png')
-
-    # image1 = cv2.imread('/home/chenlei/images/feature_detection/6817-luggage 1.JPG')
-    # image2 = cv2.imread('/home/chenlei/images/feature_detection/6817-luggage 2.JPG')
-
     image1 = get_resize_image(image1)
     image2 = get_resize_image(image2)
 
@@ -158,7 +143,6 @@ if __name__ == '__main__':
     # SIFT or SURF
     img = sift_detect(image1, image2)
 
-    # cv2.imwrite("/home/chenlei/images/feature_detection/luggage.jpg", img)
     cv2.imwrite("/home/chenlei/images/feature_detection/test1.jpg", img)
 
     # cv2.namedWindow("Image")
@@ -168,16 +152,3 @@ if __name__ == '__main__':
 
     # plt.imshow(img)
     # plt.show()
-
-    # if image1 is None:
-    #     print("img1 is none")
-    # else:
-    #     print("img1 is not none")
-    #
-    #
-    # pdf1 = cv2.imread('/home/chenlei/images/p1.pdf')
-    # if pdf1 is None:
-    #     print("pdf1 is none")
-    # else:
-    #     print("pdf1 is not none")
-
