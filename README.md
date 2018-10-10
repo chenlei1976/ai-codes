@@ -16,3 +16,4 @@ tesseract_image.py: use tesseract to extract text from images for document class
 ### CNN
 vgg16.py: VGG16 for tensorflow
 vgg16-keras.py: VGG16 for keras
+cnn.py: integrate VGG16/VGG19/InceptionV3/Xception/ResNet50 cnn selector for keras, TODO:: add finetune based on vgg16-keras.py
