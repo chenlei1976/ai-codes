@@ -89,15 +89,6 @@ if __name__ == '__main__':
     # load image
     image1 = cv.imread('/home/chenlei/images/feature_detection/7473-luggage.jpg')
     image2 = cv.imread('/home/chenlei/images/feature_detection/7553-luggage.jpeg')
-    #
-    # image1 = cv.imread('/home/chenlei/images/feature_detection/6812-luggage 1.jpg')
-    # image2 = cv.imread('/home/chenlei/images/feature_detection/6812-luggage 2.jpg')
-
-    # image1 = cv.imread('/home/chenlei/images/feature_detection/clinic1.png')
-    # image2 = cv.imread('/home/chenlei/images/feature_detection/clinic5.jpg')
-
-    # image1 = cv.imread('/home/chenlei/images/feature_detection/4114-luggage.jpg')
-    # image2 = cv.imread('/home/chenlei/images/feature_detection/5395-luggage.jpg')
 
     # image1 = get_resize_image(image1)
     # image2 = get_resize_image(image2)
