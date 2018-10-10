@@ -15,3 +15,4 @@ tesseract_image.py: use tesseract to extract text from images for document class
 
 ### CNN
 vgg16.py: VGG16 for tensorflow
+vgg16-keras.py: VGG16 for keras
