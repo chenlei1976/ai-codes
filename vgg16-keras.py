@@ -127,9 +127,6 @@ def vgg16_seq(weights_path=None):
 if __name__ == '__main__':
     print('tf version', tf.__version__)
     print('keras version', keras.__version__)
-    hello = tf.constant('hello tensorflow')
-    with tf.Session() as sess:
-        print(sess.run(hello))
 
     '''
     test inner vgg16 model
