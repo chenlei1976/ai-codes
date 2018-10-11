@@ -1,6 +1,7 @@
 # Introduction
 
 * tools.py: some common functions for image processing
+* dbhelper.py: database related functions
 
 ### machine_learning(auto select best classifier) 
 * classifiers.py: Classifier creator functions based on sklearn, include Bayes,KNN,LR,Random Forest,Decision Tree,GBDT,SVM...
@@ -10,7 +11,7 @@
 
 * feature_detection.py: use SIFT/SURF/ORB to extract image features for duplicate image checking
 * hist_detection.py: use color distribution for duplicate image checking
-* dHash.py: calculate images hamming distance for duplicate image checking
+* d_hash.py: calculate images hamming distance for duplicate image checking
 
 ### ocr(image info extraction) 
 * tesseract_image.py: use tesseract to extract text from images for document classification
