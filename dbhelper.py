@@ -59,7 +59,7 @@ class DBHelper(object):
 
         cur = conn.cursor();
         cur.execute(sql, params)
-        conn.commit()  # 注意要commit
+        conn.commit()
         cur.close()
         conn.close()
 
@@ -68,7 +68,7 @@ class DBHelper(object):
 
         cur = conn.cursor()
         cur.execute(sql, params)
-        conn.commit()  # 注意要commit
+        conn.commit()
         cur.close()
         conn.close()
 
