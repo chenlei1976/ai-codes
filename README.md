@@ -13,8 +13,8 @@
 * hist_detection.py: use color distribution for duplicate image checking
 * d_hash.py: calculate images hamming distance for duplicate image checking
 
-### ocr(image info extraction) 
-* tesseract_image.py: use tesseract to extract text from images for document classification
+### ocr(image info extraction, NLP) 
+* tesseract_image.py: use tesseract/nltk to extract/analyze text from images for document classification
 
 ### deep_learning(CNN models for fine-tune)
 * vgg16_tensorflow.py: VGG16 for tensorflow
