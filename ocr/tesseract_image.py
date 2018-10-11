@@ -21,8 +21,7 @@ word_dict = enchant.Dict("en_US")
 
 
 def _test1():
-    file_name = '/home/chenlei/images/etiqa/test/boarding_pass_15.png'
-    # file_name = '/home/chenlei/images/etiqa/test/boarding_pass_7.txt'
+    file_name = '/home/chenlei/images/boarding_pass_15.png'
     image = Image.open(file_name)
     code = pytesseract.image_to_string(image)  # return unicode
     print(code)
@@ -105,4 +104,4 @@ if __name__ == '__main__':
 
     # testing 1
     _test1()
-    # _parse_image('/home/chenlei/images/etiqa/test')
+
