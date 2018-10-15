@@ -1,25 +1,28 @@
+
 # -*- coding: UTF-8 -*-
 
 import configparser
 import pymssql
 # import MySQLdb
-import os
-
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 class DBHelper(object):
 
     def __init__(self):
-
-        self.cfg = configparser.ConfigParser()
-        self.cfg.read('sql_server.ini')
-        # self.cfg.sections()
-        self.host = self.cfg.get('db', 'host')
-        self.port = self.cfg.get('db', 'port')
-        self.user = self.cfg.get('db', 'user')
-        self.passwd = self.cfg.get('db', 'passwd')
-        self.database = self.cfg.get('db', 'database')
+        files = ['sql_server.ini']
+        cfg = configparser.ConfigParser()
+        dataset = cfg.read(files)
+        if len(dataset) != len(files):
+            raise ValueError("Failed to open/find all files")
+        # cfg.sections()
+        try:
+            self.host = cfg.get('db', 'host')
+            self.port = cfg.get('db', 'port')
+            self.user = cfg.get('db', 'user')
+            self.passwd = cfg.get('db', 'passwd')
+            self.database = cfg.get('db', 'database')
+        except configparser.NoSectionError:
+            raise ValueError("No section[db] in ini files")
 
     def connectDatabase(self):
         # conn = MySQLdb.connect(host=self.host,
@@ -81,8 +84,20 @@ class DBHelper(object):
         cur.close()
         conn.close()
 
+    def select(self, sql, *params):
+        conn = self.connectDatabase()
 
-class TestDBHelper():
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        row = cur.fetchone()
+        while row:
+            # print(str(row[0]) + " " + str(row[1]) + " " + str(row[2]))
+            row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+
+class TestDBHelper(object):
     def __init__(self):
         self.dbHelper = DBHelper()
 
