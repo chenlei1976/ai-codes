@@ -1,9 +1,12 @@
-
 # -*- coding: UTF-8 -*-
 
 import configparser
 import pymssql
 # import MySQLdb
+import os
+import pyodbc
+
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 class DBHelper(object):
@@ -25,18 +28,24 @@ class DBHelper(object):
             raise ValueError("No section[db] in ini files")
 
     def connectDatabase(self):
+        # TODO::Later use factory
         # conn = MySQLdb.connect(host=self.host,
         #                        port=self.port,
         #                        user=self.user,
         #                        passwd=self.passwd,
         #                        db=self.database,
         #                        charset='utf8')  # for chinese
-        conn = pymssql.connect(host=self.host,
-                               port=self.port,
-                               user=self.user,
-                               passwd=self.passwd,
-                               database=self.database,
-                               charset='utf8')  # for chinese
+
+        # conn = pymssql.connect(host=self.host,
+        #                        port=self.port,
+        #                        user=self.user,
+        #                        password=self.passwd,
+        #                        database=self.database,
+        #                        charset='utf8')  # for chinese
+
+        conn_info = 'DRIVER={SQL Server};SERVER=%s;DATABASE=%s;UID=%s;PWD=%s' % (
+        self.host, self.database, self.user, self.passwd)
+        conn = pyodbc.connect(conn_info)
         return conn
 
     def createDatabase(self):
@@ -91,7 +100,7 @@ class DBHelper(object):
         cur.execute(sql, params)
         row = cur.fetchone()
         while row:
-            # print(str(row[0]) + " " + str(row[1]) + " " + str(row[2]))
+            print(','.join(map(str, row)))
             row = cur.fetchone()
         cur.close()
         conn.close()
@@ -125,9 +134,13 @@ class TestDBHelper(object):
 
 
 if __name__ == "__main__":
-    testDBHelper = TestDBHelper()
+    # testDBHelper = TestDBHelper()
     # testDBHelper.testCreateDatebase()
     # testDBHelper.testCreateTable()
     # testDBHelper.testInsert()
     # testDBHelper.testUpdate()
     # testDBHelper.testDelete()
+
+    dbhelper = DBHelper()
+    sql = 'SELECT * from dbevent where id<5'
+    dbhelper.select(sql)
