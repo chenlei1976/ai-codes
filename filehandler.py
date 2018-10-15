@@ -6,18 +6,6 @@ import sys
 from stat import S_ISDIR as isdir
 
 
-# from paramiko import SSHClient
-# from scp import SCPClient
-#
-# ssh = SSHClient()
-# ssh.load_system_host_keys()
-# ssh.connect('example.com')
-#
-# sftp = ssh.open_sftp()
-# sftp.put(localpath, remotepath)
-# sftp.close()
-# ssh.close()
-
 class FileHandler(object):
 
     def __init__(self):
@@ -91,56 +79,6 @@ class FileHandler(object):
                     print(err)
                 else:
                     print('[get]', local, '<==', remote)
-
-    def put(self, sftp, local, remote):
-        # 检查路径是否存在
-        def _is_exists(path, function):
-            path = path.replace('\\', '/')
-            try:
-                function(path)
-            except Exception as error:
-                return False
-            else:
-                return True
-
-        # 拷贝文件
-        def _copy(sftp, local, remote):
-            # 判断remote是否是目录
-            if _is_exists(remote, function=sftp.chdir):
-                # 是，获取local路径中的最后一个文件名拼接到remote中
-                filename = os.path.basename(os.path.normpath(local))
-                remote = os.path.join(remote, filename).replace('\\', '/')
-            # 如果local为目录
-            if os.path.isdir(local):
-                # 在远程创建相应的目录
-                _is_exists(remote, function=sftp.mkdir)
-                # 遍历local
-                for file in os.listdir(local):
-                    # 取得file的全路径
-                    localfile = os.path.join(local, file).replace('\\', '/')
-                    # 深度递归_copy()
-                    _copy(sftp=sftp, local=localfile, remote=remote)
-            # 如果local为文件
-            if os.path.isfile(local):
-                try:
-                    sftp.put(local, remote)
-                except Exception as error:
-                    print(error)
-                    print('[put]', local, '==>', remote, 'FAILED')
-                else:
-                    print('[put]', local, '==>', remote, 'SUCCESSED')
-
-        # 检查local
-        if not _is_exists(local, function=os.stat):
-            print("'" + local + "': No such file or directory in local")
-            return False
-        # 检查remote的父目录
-        remote_parent = os.path.dirname(os.path.normpath(remote))
-        if not _is_exists(remote_parent, function=sftp.chdir):
-            print("'" + remote + "': No such file or directory in remote")
-            return False
-        # 拷贝文件
-        _copy(sftp=sftp, local=local, remote=remote)
 
 
 if __name__ == "__main__":
