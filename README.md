@@ -18,7 +18,7 @@
 
 ### deep_learning(CNN models for fine-tune)
 * vgg16_tensorflow.py: VGG16 for tensorflow
-* vgg16-keras.py: VGG16 for keras
+* vggKeras.py.py: VGG16/19 for keras
 * cnn.py: integrate VGG16/VGG19/InceptionV3/Xception/ResNet50 cnn selector for keras, TODO:: add finetune based on vgg16-keras.py
 
 ### image_crawler(image collection from web)
