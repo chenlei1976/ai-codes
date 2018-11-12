@@ -2,6 +2,9 @@
 
 * tools.py: some common functions for image processing
 * dbhelper.py: database related functions
+* filetypecheck.py: file type check(2 methods)
+* filehandler.py: ftp connect
+
 
 ### machine_learning(auto select best classifier) 
 * classifiers.py: Classifier creator functions based on sklearn, include Bayes,KNN,LR,Random Forest,Decision Tree,GBDT,SVM...
