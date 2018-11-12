@@ -1,10 +1,14 @@
+
 # -*- coding: UTF-8 -*-
 
 import configparser
+import logging
 import pymssql
 # import MySQLdb
 import os
 import pyodbc
+import h5py
+import tools
 
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -22,8 +26,9 @@ class DBHelper(object):
             self.host = cfg.get('db', 'host')
             self.port = cfg.get('db', 'port')
             self.user = cfg.get('db', 'user')
-            self.passwd = cfg.get('db', 'passwd')
+            self.password = cfg.get('db', 'password')
             self.database = cfg.get('db', 'database')
+            self.timeout = cfg.get('db', 'timeout')
         except configparser.NoSectionError:
             raise ValueError("No section[db] in ini files")
 
@@ -32,20 +37,26 @@ class DBHelper(object):
         # conn = MySQLdb.connect(host=self.host,
         #                        port=self.port,
         #                        user=self.user,
-        #                        passwd=self.passwd,
+        #                        passwd=self.password,
         #                        db=self.database,
         #                        charset='utf8')  # for chinese
 
         # conn = pymssql.connect(host=self.host,
         #                        port=self.port,
         #                        user=self.user,
-        #                        password=self.passwd,
+        #                        password=self.password,
         #                        database=self.database,
         #                        charset='utf8')  # for chinese
 
-        conn_info = 'DRIVER={SQL Server};SERVER=%s;DATABASE=%s;UID=%s;PWD=%s' % (
-        self.host, self.database, self.user, self.passwd)
-        conn = pyodbc.connect(conn_info)
+        connInfo = 'DRIVER={SQL Server};SERVER=%s;DATABASE=%s;UID=%s;PWD=%s' % (
+            self.host, self.database, self.user, self.password)
+
+        try:
+            conn = pyodbc.connect(connInfo, timeout=self.timeout)
+        except pyodbc.Error as err:
+            logging.error('can not connect[%s]!' % connInfo)
+            raise Exception("Couldn't connect[{}]".format(connInfo))
+
         return conn
 
     def createDatabase(self):
@@ -53,57 +64,98 @@ class DBHelper(object):
         conn = self.connectDatabase()  # connect Database
 
         sql = "create database if not exists " + self.database
-        cur = conn.cursor()
-        cur.execute(sql)
-        cur.close()
-        conn.close()
+
+        try:
+            cur = conn.cursor()
+            cur.execute(sql)
+        except pyodbc.Error as err:
+            logging.error('execute create db [%s] failed!' % sql)
+            raise Exception('execute create db [%s] failed!' % sql)
+        finally:
+            cur.close()
+            conn.close()
 
     def createTable(self, sql):
         conn = self.connectDatabase()
 
-        cur = conn.cursor()
-        cur.execute(sql)
-        cur.close()
-        conn.close()
+        try:
+            cur = conn.cursor()
+            cur.execute(sql)
+        except pyodbc.Error as err:
+            logging.error('execute create table [%s] failed!' % sql)
+            raise Exception('execute create table [%s] failed!' % sql)
+        finally:
+            cur.close()
+            conn.close()
 
     def insert(self, sql, *params):
         conn = self.connectDatabase()
 
-        cur = conn.cursor();
-        cur.execute(sql, params)
-        conn.commit()
-        cur.close()
-        conn.close()
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, params)
+            conn.commit()
+        except pyodbc.Error as err:
+            logging.error('execute insert [%s] failed!' % sql)
+            raise Exception('execute insert [%s] failed!' % sql)
+        finally:
+            cur.close()
+            conn.close()
 
     def update(self, sql, *params):
         conn = self.connectDatabase()
 
-        cur = conn.cursor()
-        cur.execute(sql, params)
-        conn.commit()
-        cur.close()
-        conn.close()
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, params)
+            conn.commit()
+        except pyodbc.Error as err:
+            logging.error('execute update[%s] failed!' % sql)
+            raise Exception('execute update[%s] failed!' % sql)
+        finally:
+            cur.close()
+            conn.close()
 
     def delete(self, sql, *params):
         conn = self.connectDatabase()
 
-        cur = conn.cursor()
-        cur.execute(sql, params)
-        conn.commit()
-        cur.close()
-        conn.close()
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, params)
+            conn.commit()
+        except pyodbc.Error as err:
+            logging.error('execute delete[%s] failed!' % sql)
+            raise Exception('execute delete[%s] failed!' % sql)
+        finally:
+            cur.close()
+            conn.close()
 
     def select(self, sql, *params):
         conn = self.connectDatabase()
 
-        cur = conn.cursor()
-        cur.execute(sql, params)
-        row = cur.fetchone()
-        while row:
-            print(','.join(map(str, row)))
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, params)
             row = cur.fetchone()
-        cur.close()
-        conn.close()
+            while row:
+                print(','.join(map(str, row)))
+                row = cur.fetchone()
+        except pyodbc.Error as err:
+            logging.error('execute select[%s] failed!' % sql)
+            raise Exception('execute select[%s] failed!' % sql)
+        finally:
+            cur.close()
+            conn.close()
+
+    @staticmethod
+    def fetchsome(cursor, arraySize=1000):
+        """ A generator that simplifies the use of fetchmany """
+        while True:
+            results = cursor.fetchmany(arraySize)
+            if not results:
+                break
+            for result in results:
+                yield result
 
 
 class TestDBHelper(object):
@@ -141,6 +193,31 @@ if __name__ == "__main__":
     # testDBHelper.testUpdate()
     # testDBHelper.testDelete()
 
+    # dbhelper = DBHelper()
+    # sql = 'SELECT * from dbevent where id<5'
+    # dbhelper.select(sql)
+
+    # Fetching Large Record Sets from a Database with a Generator
+
+    columns = ['ClaimId', 'PolicyNumber', 'FormLocation', 'FilePath']
+
     dbhelper = DBHelper()
-    sql = 'SELECT * from dbevent where id<5'
-    dbhelper.select(sql)
+    conn = dbhelper.connectDatabase()
+
+    cur = conn.cursor()
+    sql = """
+        SELECT C.ID AS ClaimId, C.PolicyNumber, C.CreatedDate, CT.FormLocation 
+        FROM T_Claim C , T_Claim_Travel CT WHERE CT.ClaimID = C.Id
+        """
+
+    cur.execute(sql)
+
+    for result in dbhelper.fetchsome(cur, arraysize=2):
+        # filePath = result[columns.index('FilePath')]
+        filePath = result.FilePath
+        fileName = os.path.basename(filePath)
+
+        os.path.join('root', result.FormLocation, fileName)
+
+    cur.close()
+    conn.close()
