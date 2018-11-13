@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import logging
+import os
 import sys
 import time
 
@@ -16,6 +17,15 @@ import cv2
 import pyodbc
 import numpy as np
 import pymssql
+import h5py
+import pdf2image
+import pdfhelper
+
+K_MIN_IMAGE = 400
+K_SIFT_FOLDER = 'c:\\siftFeature'
+K_SURF_FOLDER = 'c:\\surfFeature'
+K_ORB_FOLDER = 'c:\\surfFeature'
+K_USE_H5 = True
 
 
 def bgr2rgb(img):
@@ -24,7 +34,7 @@ def bgr2rgb(img):
     # return cv2.merge([r, g, b])
 
 
-def orb_detect(image1, image2):
+def orbDetect(image1, image2):
     # feature match
     orb = cv2.ORB_create()
 
@@ -49,7 +59,7 @@ def orb_detect(image1, image2):
     return bgr2rgb(img3)
 
 
-def sift_detect(img1, img2, detector='surf'):
+def siftDetect(img1, img2, detector='surf'):
     if detector.startswith('si'):
         print("sift detector......")
         sift = cv2.xfeatures2d.SIFT_create()
@@ -107,20 +117,66 @@ def sift_detect(img1, img2, detector='surf'):
     # return bgr2rgb(img3)
 
 
-k_min_image = 400
+def createDescriptors(img, detector='surf'):
+
+    if detector.startswith('si'):
+        extractor = cv2.xfeatures2d.SIFT_create()
+    else:
+        extractor = cv2.xfeatures2d.SURF_create()
+    _, des = extractor.detectAndCompute(img, None)
+
+    return des
 
 
-def get_ratio(w, h):
+def createFeature(fileName, detector='surf'):
+
+    if str(fileName).endswith('pdf') or str(fileName).endswith('PDF'):
+        img = pdfhelper.pdfToImage(fileName)
+    else:
+        img = cv2.imread(fileName)
+        if img is None:
+            logging.critical('invalid image[%s]!' % (fileName))
+            raise ValueError('invalid image[%s]!' % (fileName))
+
+    img = resizeImage(img)
+
+    des = createDescriptors(img)
+
+    if detector.startswith('si'):
+        path = K_SIFT_FOLDER
+    else:
+        path = K_SURF_FOLDER
+
+    if K_USE_H5:
+        featureName = os.path.splitext(os.path.basename(fileName))[0] + '.h5'
+        featureName = os.path.join(path, featureName)
+
+        f = h5py.File(featureName, 'w')
+        f.create_dataset('features', data=des)
+        f.close()
+
+        # Load hdf5 dataset
+        # f = h5py.File(featureName, 'r')
+        # des = f['features']
+        # f.close()
+    else:
+        # use npy file
+        featureName = os.path.splitext(os.path.basename(fileName))[0]+'.npy'
+        featureName = os.path.join(path, featureName)
+        np.save(featureName, des)
+
+
+def _getRatio(w, h):
     v = float(min(h, w))
-    if v < k_min_image:
+    if v < K_MIN_IMAGE:
         return 1
-    return v / k_min_image
+    return v / K_MIN_IMAGE
 
 
 # @tools.timeit
-def get_resize_image(image):
+def resizeImage(image):
     h, w, c = image.shape
-    ratio = get_ratio(w, h)
+    ratio = _getRatio(w, h)
     return cv2.resize(image, (int(w / ratio), int(h / ratio)), interpolation=cv2.INTER_CUBIC)
 
 
@@ -134,15 +190,31 @@ if __name__ == '__main__':
     image1 = cv2.imread('/home/chenlei/images/feature_detection/4114-luggage.jpg')
     image2 = cv2.imread('/home/chenlei/images/feature_detection/5395-luggage.jpg')
 
-    image1 = get_resize_image(image1)
-    image2 = get_resize_image(image2)
+    # image1 = cv2.imread('/home/chenlei/images/feature_detection/7473-luggage.jpg')
+    # image2 = cv2.imread('/home/chenlei/images/feature_detection/7553-luggage.jpeg')
+
+    # image1 = cv2.imread('/home/chenlei/images/feature_detection/6812-luggage 1.jpg')
+    # image2 = cv2.imread('/home/chenlei/images/feature_detection/6812-luggage 2.jpg')
+
+    # image1 = cv2.imread('/home/chenlei/images/feature_detection/hospital1.jpg')
+    # image2 = cv2.imread('/home/chenlei/images/feature_detection/hospital3.jpg')
+
+    # image1 = cv2.imread('/home/chenlei/images/feature_detection/clinic1.png')
+    # image2 = cv2.imread('/home/chenlei/images/feature_detection/clinic2.png')
+
+    # image1 = cv2.imread('/home/chenlei/images/feature_detection/6817-luggage 1.JPG')
+    # image2 = cv2.imread('/home/chenlei/images/feature_detection/6817-luggage 2.JPG')
+
+    image1 = resizeImage(image1)
+    image2 = resizeImage(image2)
 
     # ORB
-    # img = orb_detect(image1, image2)
+    # img = orbDetect(image1, image2)
 
     # SIFT or SURF
-    img = sift_detect(image1, image2)
+    img = siftDetect(image1, image2)
 
+    # cv2.imwrite("/home/chenlei/images/feature_detection/luggage.jpg", img)
     cv2.imwrite("/home/chenlei/images/feature_detection/test1.jpg", img)
 
     # cv2.namedWindow("Image")
@@ -152,3 +224,16 @@ if __name__ == '__main__':
 
     # plt.imshow(img)
     # plt.show()
+
+    # if image1 is None:
+    #     print("img1 is none")
+    # else:
+    #     print("img1 is not none")
+    #
+    #
+    # pdf1 = cv2.imread('/home/chenlei/images/p1.pdf')
+    # if pdf1 is None:
+    #     print("pdf1 is none")
+    # else:
+    #     print("pdf1 is not none")
+
