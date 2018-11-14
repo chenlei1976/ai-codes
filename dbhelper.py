@@ -157,6 +157,29 @@ class DBHelper(object):
             for result in results:
                 yield result
 
+    @staticmethod
+    def insertRecord(conn, sql, *params):
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, params)
+            conn.commit()
+        except pyodbc.Error as err:
+            logging.error('execute insert [%s] failed!' % sql)
+            raise Exception('execute insert [%s] failed!' % sql)
+        finally:
+            cur.close()
+
+    @staticmethod
+    def updateRecord(conn, sql, *params):
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, params)
+            conn.commit()
+        except pyodbc.Error as err:
+            logging.error('execute update[%s] failed!' % sql)
+            raise Exception('execute update[%s] failed!' % sql)
+        finally:
+            cur.close()
 
 class TestDBHelper(object):
     def __init__(self):
