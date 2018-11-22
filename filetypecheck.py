@@ -66,16 +66,21 @@ def isImageByCustomized(fileType):
 def fileTypeByCustomized(fileName):
     fType = 'unknown'
     if os.path.exists(fileName) and os.path.isfile(fileName):
+        if fileName.lower().endswith('txt'):
+            return 'txt'
         with open(fileName, 'rb') as f:
             for k, v in k_fileTypeDict.items():
                 numOfBytes = int(len(k) / 2)
                 f.seek(0)
-                hBytes = struct.unpack('B' * numOfBytes, f.read(numOfBytes))
+                try:
+                    hBytes = struct.unpack('B' * numOfBytes, f.read(numOfBytes))
+                except struct.error:
+                    return fType
                 tmpCode = bytes2hex(hBytes)
                 if tmpCode == k:
                     fType = v
                     break
-    print("file [{}], type[{}]".format(fileName, fType))
+    # print("file [{}], type[{}]".format(fileName, fType))
     return fType
 
 
@@ -121,3 +126,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
