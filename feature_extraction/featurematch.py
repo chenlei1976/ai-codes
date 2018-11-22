@@ -17,7 +17,7 @@ k_log_file = '.\\log\\feature-match-{}.log'
 
 k_sql_unhandled = '''SELECT Claim_Upload_Id,ClaimID,Feature_File_Path 
 FROM claim.dbo.T_Claim_Upload_Feature 
-WHERE Claim_Upload_Id IN (27960,27961) AND STATUS =0 ORDER BY Claim_Upload_Id'''
+WHERE STATUS =0 ORDER BY Claim_Upload_Id'''
 
 k_sql_update_unhandled = '''UPDATE claim.dbo.T_Claim_Upload_Feature 
 SET STATUS=1 WHERE Claim_Upload_Id={}'''
@@ -149,14 +149,3 @@ if __name__ == "__main__":
     startTime = time.time()
     main()
     logging.critical('feature extraction take %fs', time.time()-startTime)
-
-    # des1 =loadH5('.\\surfFeature\\6247-jpg.h5')
-    #
-    # des2 =loadH5('.\\surfFeature\\6316-jpg.h5')
-    #
-    # num = featureMatch(des1, des2)
-    # print('similar[{}]'.format(num))
-    #
-    # num = featureMatch(des2, des1)
-    # print('similar[{}]'.format(num))
-
