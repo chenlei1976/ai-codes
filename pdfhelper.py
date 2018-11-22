@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 import PyPDF2
 import pdf2image
-
+import logging
 
 def pdfToText(file_name):
 
@@ -18,13 +18,17 @@ def pdfToText(file_name):
 
 
 def pdfToImage(pdfName, imageName=None):
-    images = pdf2image.convert_from_path(pdfName)
-    if len(images) == 0:
-        pass
-    if imageName is not None:
-        images[0].save(imageName, 'PNG')
-    return images[0]
-
+    try:
+        images = pdf2image.convert_from_path(pdfName)
+        print("len[{}] file[{}]]".format(len(images), pdfName))
+        if len(images) == 0:
+            return None
+        if imageName is not None:
+            images[0].save(imageName, 'PNG')
+        return images[0]
+    except Exception:
+        logging.error('open[%s] failed!' % pdfName)
+        return None
 
 if __name__ == '__main__':
-    img = pdfToImage('./ta.pdf')
+    img = pdfToImage('C:\\Users\\Public\\Boarding Passes.pdf')
