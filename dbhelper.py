@@ -3,12 +3,14 @@
 
 import configparser
 import logging
-import pymssql
-# import MySQLdb
 import os
-import pyodbc
-import h5py
-import tools
+
+try:
+    import pypyodbc as pyodbc
+    print("using pypyodbc")
+except ImportError:
+    print("using pyodbc")
+    import pyodbc
 
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -28,7 +30,7 @@ class DBHelper(object):
             self.user = cfg.get('db', 'user')
             self.password = cfg.get('db', 'password')
             self.database = cfg.get('db', 'database')
-            self.timeout = cfg.get('db', 'timeout')
+            self.timeout = int(cfg.get('db', 'timeout'))
         except configparser.NoSectionError:
             raise ValueError("No section[db] in ini files")
 
@@ -148,7 +150,7 @@ class DBHelper(object):
             conn.close()
 
     @staticmethod
-    def fetchsome(cursor, arraySize=1000):
+    def fetchsome(cursor, arraySize=5000):
         """ A generator that simplifies the use of fetchmany """
         while True:
             results = cursor.fetchmany(arraySize)
@@ -158,89 +160,126 @@ class DBHelper(object):
                 yield result
 
     @staticmethod
+    def executemany(conn, sql, params):
+        ret = True
+        try:
+            cur = conn.cursor()
+            # print('params ', params)
+            cur.executemany(sql, params)
+            conn.commit()
+        except Exception:
+            logging.error('executemany [%s] failed!' % sql)
+            # assert False
+            # raise Exception('executemany [%s] failed!' % sql)
+            ret = False
+        finally:
+            cur.close()
+            return ret
+
+    @staticmethod
     def insertRecord(conn, sql, *params):
+        ret = True
         try:
             cur = conn.cursor()
             cur.execute(sql, params)
             conn.commit()
-        except pyodbc.Error as err:
-            logging.error('execute insert [%s] failed!' % sql)
-            raise Exception('execute insert [%s] failed!' % sql)
+        except Exception:
+            logging.error('insert [%s] failed!' % sql)
+            ret = False
         finally:
             cur.close()
+            return ret
 
     @staticmethod
     def updateRecord(conn, sql, *params):
+        ret = True
         try:
             cur = conn.cursor()
             cur.execute(sql, params)
             conn.commit()
-        except pyodbc.Error as err:
-            logging.error('execute update[%s] failed!' % sql)
-            raise Exception('execute update[%s] failed!' % sql)
+        except Exception:
+            logging.error('update [%s] failed!' % sql)
+            ret = False
         finally:
             cur.close()
+            return ret
 
-class TestDBHelper(object):
-    def __init__(self):
-        self.dbHelper = DBHelper()
 
-    def testCreateDatebase(self):
-        self.dbHelper.createDatabase()
-
-    def testCreateTable(self):
-        sql = "create table testtable(id int primary key auto_increment,name varchar(50),url varchar(200))"
-        self.dbHelper.createTable(sql)
-
-    def testInsert(self):
-        sql = "insert into testtable(name,url) values(%s,%s)"
-        params = ("test", "test")
-        self.dbHelper.insert(sql, *params)
-
-    def testUpdate(self):
-        sql = "update testtable set name=%s,url=%s where id=%s"
-        params = ("update", "update", "1")
-        self.dbHelper.update(sql, *params)
-
-    def testDelete(self):
-        sql = "delete from testtable where id=%s"
-        params = ("1")
-        self.dbHelper.delete(sql, *params)
+    @staticmethod
+    def getValue(conn, sql, *params):
+        num = -1
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, params)
+            results = cur.fetchone()
+            if results[0] is None:
+                num = 0
+            else:
+                num = int(results[0])
+        except Exception:
+            logging.error('query sql[%s] failed!' % sql)
+            num = -1
+        finally:
+            cur.close()
+            return num
 
 
 if __name__ == "__main__":
-    # testDBHelper = TestDBHelper()
-    # testDBHelper.testCreateDatebase()
-    # testDBHelper.testCreateTable()
-    # testDBHelper.testInsert()
-    # testDBHelper.testUpdate()
-    # testDBHelper.testDelete()
 
+    # test1
+    # dbHelper = DBHelper()
+    # sql = "SELECT ID, ClaimID, FilePath, UploadDate, UploadBy FROM online.dbo.T_Claim_Upload where id<3;"
+    # dbHelper.select(sql)
+
+    # test2
+    # columns = ['ClaimId', 'PolicyNumber', 'FormLocation', 'FilePath']
+    #
     # dbhelper = DBHelper()
-    # sql = 'SELECT * from dbevent where id<5'
-    # dbhelper.select(sql)
-
-    # Fetching Large Record Sets from a Database with a Generator
-
-    columns = ['ClaimId', 'PolicyNumber', 'FormLocation', 'FilePath']
+    # conn = dbhelper.connectDatabase()
+    #
+    # cur = conn.cursor()
+    # sql = """
+    #     SELECT C.ID AS ClaimId, C.PolicyNumber, C.CreatedDate, CT.FormLocation
+    #     FROM T_Claim C , T_Claim_Travel CT WHERE CT.ClaimID = C.Id
+    #     """
+    #
+    # cur.execute(sql)
+    #
+    # for result in dbhelper.fetchsome(cur, arraysize=2):
+    #     # filePath = result[columns.index('FilePath')]
+    #     filePath = result.FilePath
+    #     fileName = os.path.basename(filePath)
+    #
+    #     os.path.join('root', result.FormLocation, fileName)
+    #
+    # cur.close()
+    # conn.close()
 
     dbhelper = DBHelper()
     conn = dbhelper.connectDatabase()
 
     cur = conn.cursor()
-    sql = """
-        SELECT C.ID AS ClaimId, C.PolicyNumber, C.CreatedDate, CT.FormLocation 
-        FROM T_Claim C , T_Claim_Travel CT WHERE CT.ClaimID = C.Id
-        """
 
+    sql = 'SELECT ID, ClaimID, FilePath FROM claim.dbo.T_Claim_Upload WHERE id<3'
     cur.execute(sql)
 
-    for result in dbhelper.fetchsome(cur, arraysize=2):
+    rootPath = "I:\\05_Claims\\02_eClaim_Files"
+
+    for result in dbhelper.fetchsome(cur, arraySize=2):
         # filePath = result[columns.index('FilePath')]
-        filePath = result.FilePath
+        # filePath = result.FilePath
+        filePath = result[2]
         fileName = os.path.basename(filePath)
+        print(','.join(map(str, result)))
+        subFolder = str(filePath).split("\\\\")[1]
 
-        os.path.join('root', result.FormLocation, fileName)
+        possibleFile2 = os.path.join(rootPath, subFolder)
 
+        subFolder = subFolder.split("\\")[0]
+        # print('subFolder ', subFolder)
+
+        possibleFile1 = os.path.join(rootPath, subFolder, fileName)
+        # print('real path ', realPath)
     cur.close()
     conn.close()
+    
