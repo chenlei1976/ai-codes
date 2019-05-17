@@ -14,11 +14,10 @@ k_run_file = 'C:\\duplicatecheck\\duplicate-running.txt'
 
 if __name__ == '__main__':
     # tools.initLog(k_log_file.format(datetime.date.today().strftime('%Y%m%d')))
-    tools.initLog(k_log_file.format(datetime.datetime.now().strftime('%Y%m%d%H%M')))
-
     if os.path.exists(k_run_file):
-        logging.critical('last duplicate is still running')
+        print('last duplicate is still running')
     else:
+        tools.initLog(k_log_file.format(datetime.datetime.now().strftime('%Y%m%d%H%M')))
         try:
             logging.critical('create running file')
             file = open(k_run_file, 'w')

@@ -26,8 +26,8 @@ WHERE CU.ClaimID = C.Id AND CU.ID>{}'''
 k_sql_insert = '''INSERT INTO online.dbo.T_Claim_Upload_Feature(Claim_Upload_Id, ClaimID, Feature_File_Path)
 VALUES(?,?,?)'''
 
-k_sql_single_insert = '''INSERT INTO online.dbo.T_Claim_Upload_Feature(Claim_Upload_Id, ClaimID, Feature_File_Path) 
-VALUES({},{},{})'''
+# k_sql_single_insert = '''INSERT INTO online.dbo.T_Claim_Upload_Feature(Claim_Upload_Id, ClaimID, Feature_File_Path)
+# VALUES({},{},{})'''
 
 k_config_file = 'C:\\duplicatecheck\\duplicate_config.ini'
 k_log_file = 'C:\\duplicatecheck\\log\\feature-extraction-{}.log'
@@ -138,10 +138,10 @@ def handleFiles(id, file1, file2):
     fileType = 'unknown'
     tmp = filetypecheck.fileTypeByCustomized(file1)
     if tmp == 'unknown':
-        logging.warning('id[{}], invalid 1st file[{}]'.format(id, file1))
+        logging.info('id[{}], invalid 1st file[{}]'.format(id, file1))
         tmp = filetypecheck.fileTypeByCustomized(file2)
         if tmp == 'unknown':
-            logging.warning('id[{}], invalid 2nd file[{}]'.format(id, file2))
+            logging.info('id[{}], invalid 2nd file[{}]'.format(id, file2))
         else:
             realFile = file2
             fileType = tmp
