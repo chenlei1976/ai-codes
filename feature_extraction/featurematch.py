@@ -4,20 +4,30 @@ import cv2
 import psutil
 from dbhelper import DBHelper
 import os
+import math
 import tools
 import logging
 import h5py
 import datetime
+import multiprocessing
+from multiprocessing import Pool as ProcessPool
+from multiprocessing import freeze_support
+from multiprocessing.pool import ThreadPool
+import math
+
 
 k_use_h5 = True
 k_duplicate_threshold = 10
-k_near_size = 1000
+k_near_size = 20000
 k_sql_batch_size = 1000
 k_log_file = '.\\log\\feature-match-{}.log'
 
 k_sql_unhandled = '''SELECT Claim_Upload_Id,ClaimID,Feature_File_Path 
 FROM claim.dbo.T_Claim_Upload_Feature 
-WHERE STATUS =0 ORDER BY Claim_Upload_Id'''
+WHERE Claim_Upload_Id IN (27950,27921) AND STATUS =0 ORDER BY Claim_Upload_Id'''
+
+# (27950,27921)
+# (27960,27961)
 
 k_sql_update_unhandled = '''UPDATE claim.dbo.T_Claim_Upload_Feature 
 SET STATUS=1 WHERE Claim_Upload_Id={}'''
@@ -76,6 +86,15 @@ def featureMatch(des1, des2):
         return 0
 
 
+def batchMatch(matchingFieldId, matchingFeature, matchedFeatures):
+    duplicateParams = []
+    for matchedFieldId, matchedFeature in matchedFeatures:
+        num = featureMatch(matchingFeature, matchedFeature)
+        if num > k_duplicate_threshold:
+            duplicateParams.append((matchingFieldId, matchedFieldId, float(num)))
+    return duplicateParams
+
+
 def main():
 
     tools.initLog(k_log_file.format(datetime.date.today().strftime('%Y%m%d')))
@@ -83,13 +102,11 @@ def main():
     dbhelper = DBHelper()
     conn = dbhelper.connectDatabase()
     cur = conn.cursor()
-
     cur.execute(k_sql_unhandled)
-
     connUpdate = dbhelper.connectDatabase()  # update/insert db
 
     connMatch = dbhelper.connectDatabase()
-
+    cpus = multiprocessing.cpu_count()
     for result in DBHelper.fetchsome(cur):
         fileId = int(result[0])
         if fileId in k_desDict.keys():
@@ -105,6 +122,7 @@ def main():
             curMatch.execute(k_sql_matched.format(k_near_size, fileId, claimID))
             duplicateParams = []  # insert duplicate features
             beginTime = time.time()
+
             for records in DBHelper.fetchsome(curMatch):
                 fileIdMatched = int(records[0])
 
@@ -115,6 +133,7 @@ def main():
                     k_desDict[fileIdMatched] = desMatched
 
                 if desMatched is not None:
+                    # print('{} matching {}]'.format(fileId,  fileIdMatched))
                     num = featureMatch(desMatching, desMatched)
                     if num > k_duplicate_threshold:
                         logging.critical('{}>>{} matching {}>>{}, similar[{}]'.format(
@@ -149,3 +168,14 @@ if __name__ == "__main__":
     startTime = time.time()
     main()
     logging.critical('feature extraction take %fs', time.time()-startTime)
+
+    # des1 =loadH5('.\\surfFeature\\6247-jpg.h5')
+    #
+    # des2 =loadH5('.\\surfFeature\\6316-jpg.h5')
+    #
+    # num = featureMatch(des1, des2)
+    # print('similar[{}]'.format(num))
+    #
+    # num = featureMatch(des2, des1)
+    # print('similar[{}]'.format(num))
+
