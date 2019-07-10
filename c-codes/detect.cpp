@@ -589,3 +589,11 @@ int LivenessDetector::detectImageFromFile(const char* imageFile)
     run(input_image,270);
     return 0;
 }
+
+//int to string function
+string int2str(int &i) {
+    string s;
+    stringstream ss(s);
+    ss << i;
+    return ss.str();
+}
